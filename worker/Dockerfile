@@ -1,9 +1,6 @@
-FROM ubuntu:18.04
+FROM python:3.8-slim
 
-RUN apt-get update -y && \
-    apt-get install -y python3-pip python3-dev
-
-RUN pip3 install pika
+RUN pip install pika
 
 WORKDIR /app
 

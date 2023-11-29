@@ -1,15 +1,23 @@
 version: '3.8'
 
 services:
-  
   rabbitmq:
     image: 'rabbitmq:3-management'
     ports:
       - '5672:5672'
       - '15672:15672'
-    env : 
-    - RABBITMQ_DEFAULT_USER=user
-    - RABBITMQ_DEFAULT_PASS=password
+    #environment : 
+    #- RABBITMQ_DEFAULT_USER=user
+    #- RABBITMQ_DEFAULT_PASS=password
+
+  server:
+    build: serverjs
+    volumes:
+      - ./serverjs:/app
+    ports:
+      - 5001:5000
+    depends_on:
+      - rabbitmq
 
   worker:
     build: worker
@@ -18,9 +26,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
-  server:
-    build: serverjs
+  worker2:
+    build: worker
     volumes:
-      - ./serverjs:/app
-    ports:
-      - 5000:5000
+      - ./worker:/app
+    environment:
+      - PYTHONUNBUFFERED=1

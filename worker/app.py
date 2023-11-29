@@ -19,7 +19,7 @@ def callback(ch, method, properties, body):
         # You can handle errors or requeue the task if needed
 
 def worker():
-    time.sleep(30)  # Wait for RabbitMQ to start
+    time.sleep(15)  # Wait for RabbitMQ to start and server to create queues/exchanges
     try:
         connection = pika.BlockingConnection(pika.URLParameters(rabbitMQUrl))
         channel = connection.channel()

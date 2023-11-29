@@ -1,69 +1,49 @@
-/*
-from flask import Flask
-import pika
+const amqp = require('amqplib');
 
+const rabbitMQUrl = 'amqp://rabbitmq';
+const exchange = 'tasks';
+const workerQueue = 'worker_queue';
 
-@app.route('/create-job/<msg>')
-def add(cmd):
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host="rabbitmq"))
-    except pika.exceptions.AMQPConnectionError as exc:
-        print("Failed to connect to RabbitMQ service. Message wont be sent.")
-        return
+let connection, channel;
 
-    channel = connection.channel()
-    channel.queue_declare(queue='task_queue', durable=True)
-    channel.basic_publish(
-        exchange='',
-        routing_key='task_queue',
-        body=cmd,
-        properties=pika.BasicProperties(
-            delivery_mode=2,  # make message persistent
-        ))
-   
-    connection.close()
-    return " ___ Sent: %s" % cmd
+async function initialize() {
+  await new Promise(r => setTimeout(r, 10000));
+  try {
+    connection = await amqp.connect(rabbitMQUrl);
+    channel = await connection.createChannel();
 
-    BODY must contains : 
-    file_s3_id = "server1"
-    file_s3_name = "file1"
-    emoji = True
-    gpu = True
-*/
-    
-const amqplib = require('amqplib/callback_api');
-const queue = 'tasks';
+    // Declare the exchange and queue
+    await channel.assertExchange(exchange, 'direct', { durable: false });
+    await channel.assertQueue(workerQueue, { durable: true });
+    await channel.bindQueue(workerQueue, exchange, '');
 
-const rabbitmq_gpu = "amqp://rabbitmqtest:5672";
-const rabbitmq_cpu = "amqp://rabbitmq:5672";
+    console.log('Initialized connection and channel.');
 
-amqplib.connect(rabbitmq_cpu, (err, conn) => {
-  if (err) throw err;
+  } catch (error) {
+    console.error(`Error initializing connection and channel: ${error.message}`);
+  }
+}
 
-  // Listener
-  conn.createChannel((err, ch2) => {
-    if (err) throw err;
+async function sendTask(task) {
+  try {
+    if (!connection || !channel) {
+      // If the connection or channel is not initialized, initialize them
+      await initialize();
+    }
 
-    ch2.assertQueue(queue);
+    // Send the task as a JSON string
+    const taskJSON = JSON.stringify(task);
+    channel.sendToQueue(workerQueue, Buffer.from(taskJSON));
 
-    ch2.consume(queue, (msg) => {
-      if (msg !== null) {
-        console.log(msg.content.toString());
-        ch2.ack(msg);
-      } else {
-        console.log('Consumer cancelled by server');
-      }
-    });
-  });
+    console.log(`Sent task: ${taskJSON}`);
+  } catch (error) {
+    console.error(`Error sending task: ${error.message}`);
+  }
+}
 
-  // Sender
-  conn.createChannel((err, ch1) => {
-    if (err) throw err;
+// Initialize the connection and channel before sending the first task
+initialize();
 
-    ch1.assertQueue(queue);
-
-    setInterval(() => {
-      ch1.sendToQueue(queue, Buffer.from('something to do'));
-    }, 1000);
-  });
-});
+  // Example usage: send a task to the worker
+const task = { taskData: 'This is a sample task' };
+//sendTask(task);

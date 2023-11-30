@@ -1,6 +1,6 @@
 const amqp = require('amqplib');
 
-const rabbitMQUrl = 'amqp://rabbitmq';
+const rabbitMQUrl = 'amqp://141.145.217.120:5672';
 const exchange = 'tasks';
 const workerQueue = 'worker_queue';
 

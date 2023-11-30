@@ -3,7 +3,7 @@ import time
 import json
 
 # RabbitMQ connection parameters
-rabbitMQUrl = 'amqp://rabbitmq'
+rabbitMQUrl = 'amqp://141.145.217.120:5672'
 
 def callback(ch, method, properties, body):
     try:

@@ -7,7 +7,6 @@ const workerQueue = 'worker_queue';
 let connection, channel;
 
 async function initialize() {
-  await new Promise(r => setTimeout(r, 10000));
   try {
     connection = await amqp.connect(rabbitMQUrl);
     channel = await connection.createChannel();
